@@ -23,7 +23,9 @@ const getAllJokes = asyncHandler(async (req, res) => {
     const userId = req.user._id;
     const jokes = await Joke.find({ author: userId });
     if (jokes.length === 0) {
-        throw new ApiError(404, "Jokes not found!");
+        return res
+            .status(200)
+            .json(new ApiResponse(200, jokes, "Jokes not created yet."));
     }
 
     return res

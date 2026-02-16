@@ -15,7 +15,7 @@ import jokeRouter from "./routes/joke.routes.js";
 import userRouter from "./routes/user.routes.js";
 
 // routes
-app.use("/api/v1/joke",jokeRouter);
-app.use("/api/v1/user",userRouter);
+app.use("/api/v1/jokes",jokeRouter);
+app.use("/api/v1/users",userRouter);
 
 export default app;

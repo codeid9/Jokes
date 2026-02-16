@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import User from "../models/user.modes.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiResponse.js";
@@ -15,6 +16,53 @@ const generateAccessAndRefreshTokens = async (userId) => {
         console.error("Error while generating tokens!!", error);
     }
 };
+
+const refreshAccessToken = asyncHandler(async (req, res) => {
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
+
+    if (!incomingRefreshToken) {
+        throw new ApiError(401, "You don't have refresh token!");
+    }
+
+    try {
+        const decodedToken = jwt.verify(
+            incomingRefreshToken,
+            process.env.REFRESH_TOKEN_SECRET
+        );
+
+        const user = await User.findById(decodedToken?._id);
+
+        if (!user) {
+            throw new ApiError(401, "Invalid Refresh Token: User not found");
+        }
+
+        if (incomingRefreshToken !== user?.refreshToken) {
+            throw new ApiError(401, "Refresh token has expired or used");
+        }
+
+        const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshTokens(user._id);
+
+        const options = {
+            httpOnly: true,
+            secure: true
+        };
+
+        return res
+            .status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", newRefreshToken, options)
+            .json(
+                new ApiResponse(
+                    200, 
+                    { accessToken, refreshToken: newRefreshToken }, 
+                    "Token refreshed!"
+                )
+            );
+
+    } catch (error) {
+        throw new ApiError(401, error?.message || "Invalid refresh token");
+    }
+});
 
 const registerUser = asyncHandler(async (req, res) => {
     const { username, fullname, email, password } = req.body;
@@ -51,7 +99,9 @@ const registerUser = asyncHandler(async (req, res) => {
     }
     return res
         .status(201)
-        .json(new ApiResponse(201, "User registered successfully."));
+        .json(
+            new ApiResponse(201, createdUser, "User registered successfully."),
+        );
 });
 
 const loginUser = asyncHandler(async (req, res) => {
@@ -125,4 +175,11 @@ const updateUser = asyncHandler(async (req, res) => {});
 
 const deleteUser = asyncHandler(async (req, res) => {});
 
-export { registerUser, loginUser, logoutUser, updateUser, deleteUser };
+export {
+    registerUser,
+    loginUser,
+    logoutUser,
+    updateUser,
+    deleteUser,
+    refreshAccessToken,
+};
