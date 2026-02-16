@@ -4,9 +4,12 @@ import verifyJWT from "../middlewares/auth.middleware.js";
 
 const jokeRouter = Router();
 // controllers import 
-import { createJoke,getAllJokes} from "../controllers/joke.controllers.js";
+import { createJoke,deleteJokeById,getAllJokes,myJokes, updateJokeById} from "../controllers/joke.controllers.js";
 // routes  define
+jokeRouter.get("/public",getAllJokes);
+jokeRouter.get("/my-jokes",verifyJWT,myJokes);
 jokeRouter.post("/",verifyJWT,createJoke);
-jokeRouter.get("/",verifyJWT,getAllJokes);
+jokeRouter.put("/:id",verifyJWT,updateJokeById);
+jokeRouter.delete("/:id",verifyJWT,deleteJokeById);
 
 export default jokeRouter;
