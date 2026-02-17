@@ -6,14 +6,19 @@ import mongoose from "mongoose";
 
 // add a joke into database
 const createJoke = asyncHandler(async (req, res) => {
-    const { joke } = req.body;
-    if (!joke || joke.trim() === "") {
-        throw new ApiError(400, "All Fields are required!!");
+    const { content, category } = req.body;
+    if (!content || content.trim() === "") {
+        throw new ApiError(400, "joke is required!!");
     }
-    const newjoke = await Joke.create({
-        content: joke.trim(),
+
+    let joke = {
+        content: content.trim(),
         author: req.user._id,
-    });
+    };
+    if (category) {
+        joke.category = category;
+    }
+    const newjoke = await Joke.create(joke);
 
     return res
         .status(201)
@@ -21,63 +26,141 @@ const createJoke = asyncHandler(async (req, res) => {
 });
 // fetch all jokes
 const getAllJokes = asyncHandler(async (req, res) => {
-    const jokes = await Joke.find({ isPublic: true });
+    const { category, page = 1, limit = 4 } = req.query;
+    let filter = { isPublic: true };
+    if (category) {
+        filter.category = category;
+    }
+    const totalJokes = await Joke.countDocuments(filter);
+
+    const jokes = await Joke.find(filter)
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(parseInt(limit))
+        .populate("author", "username fullname");
     return res
         .status(200)
-        .json(new ApiResponse(200, jokes, "Jokes Fetched successfully."));
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    jokes,
+                    totalJokes,
+                    currentPage: page,
+                    totalPages: Math.ceil(totalJokes / limit),
+                },
+                "Public jokes fetched successfully.",
+            ),
+        );
 });
+// get a random joke
+const getRandomJoke = asyncHandler(async (req, res) => {
+    const joke = await Joke.aggregate([
+        {
+            $match: {
+                isPublic: true,
+            },
+        },
+        {
+            $sample: { size: 1 },
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "author",
+                foreignField: "_id",
+                as: "authorDetails",
+            },
+        },
+        {
+            $unwind: "$authorDetails",
+        },
+        {
+            $project: {
+                content: 1,
+                category: 1,
+                "authorDetails.username": 1,
+                "authorDetails.fullname": 1,
+            },
+        },
+    ]);
+
+    if (!joke.length) {
+        throw new ApiError(404, "Joke not found");
+    }
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, joke[0], "Random a joke fetched successfully"),
+        );
+});
+
 // get logged in user's jokes
 const myJokes = asyncHandler(async (req, res) => {
     const userId = req.user._id;
     const jokes = await Joke.find({ author: userId });
-
+    if (!jokes.length) {
+        throw new ApiError(404, "Joke not found");
+    }
     return res
         .status(200)
         .json(new ApiResponse(200, jokes, "Jokes fetched successfully."));
 });
 // update joke by id
 const updateJokeById = asyncHandler(async (req, res) => {
-    const {id} = req.params;
-    const {content,category,isPublic} = req.body;
-    if(!content && !category && typeof isPublic === undefined){
-        throw new ApiError(400,"give atleast one field to update!!");
+    const { id } = req.params;
+    const { content, category, isPublic } = req.body;
+    if (!content && !category && typeof isPublic === undefined) {
+        throw new ApiError(400, "give atleast one field to update!!");
     }
-    if(!mongoose.Types.ObjectId.isValid(id)){
-        throw new ApiError(400,"Invalid ID");
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new ApiError(400, "Invalid ID");
     }
     const joke = await Joke.findById(id);
-    if(!joke){
-        throw new ApiError(404,"Joke not found");
+    if (!joke) {
+        throw new ApiError(404, "Joke not found");
     }
-    if(joke.author.toString() !== req.user._id.toString()){
-        throw new ApiError(403,"Invalid Author");
+    if (joke.author.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "Invalid Author");
     }
-    if(content) joke.content = content;
-    if(category) joke.category = category;
-    if(typeof isPublic !== undefined) joke.isPublic = isPublic;
+    if (content) joke.content = content;
+    if (category) joke.category = category;
+    if (typeof isPublic !== undefined) joke.isPublic = isPublic;
 
     const updatedJoke = await joke.save();
-    return res.status(200).json(new ApiResponse(200,updatedJoke,"Joke updated successfully."))
+    return res
+        .status(200)
+        .json(new ApiResponse(200, updatedJoke, "Joke updated successfully."));
 });
 
 // delete by id
 const deleteJokeById = asyncHandler(async (req, res) => {
-    const {id} = req.params;
-    if(!mongoose.Types.ObjectId.isValid(id)){
-        throw new ApiError(400,"Invalid jokeId!!");
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new ApiError(400, "Invalid jokeId!!");
     }
     const joke = await Joke.findById(id);
-    if(!joke){
-        throw new ApiError(404,"Joke Not Found");
+    if (!joke) {
+        throw new ApiError(404, "Joke Not Found");
     }
-    if(joke.author.toString() !== req.user._id.toString()){
-        throw new ApiError(400,"Invalid author!");
+    if (joke.author.toString() !== req.user._id.toString()) {
+        throw new ApiError(400, "Invalid author!");
     }
-    const result = await Joke.deleteOne({_id:id});
-    if(result.deletedCount === 0){
-        throw new ApiError(500,"Something went wrong! While deleting Joke.");
+    const result = await Joke.deleteOne({ _id: id });
+    if (result.deletedCount === 0) {
+        throw new ApiError(500, "Something went wrong! While deleting Joke.");
     }
-    return res.status(200).json(new ApiResponse(200,{},"Joke deleted successfully."));
+    return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "Joke deleted successfully."));
 });
 
-export { createJoke, getAllJokes, myJokes, updateJokeById, deleteJokeById };
+export {
+    createJoke,
+    getAllJokes,
+    getRandomJoke,
+    myJokes,
+    updateJokeById,
+    deleteJokeById,
+};
