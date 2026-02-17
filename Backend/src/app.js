@@ -16,10 +16,10 @@ app.use(
 // imports
 import jokeRouter from "./routes/joke.routes.js";
 import userRouter from "./routes/user.routes.js";
-
+import likeRouter from "./routes/like.routes.js";
 // routes
 app.use("/api/v1/jokes", jokeRouter);
 app.use("/api/v1/users", userRouter);
-
+app.use("/api/v1/likes", likeRouter);
 app.use(errorMiddleware);
 export default app;

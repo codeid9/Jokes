@@ -25,7 +25,7 @@ const createJoke = asyncHandler(async (req, res) => {
         .json(new ApiResponse(201, newjoke, "Joke created successfully."));
 });
 // fetch all jokes
-const getAllJokes = asyncHandler(async (req, res) => {
+const getPublicJokes = asyncHandler(async (req, res) => {
     const { category, page = 1, limit = 4 } = req.query;
     let filter = { isPublic: true };
     if (category) {
@@ -101,7 +101,7 @@ const myJokes = asyncHandler(async (req, res) => {
     const userId = req.user._id;
     const jokes = await Joke.find({ author: userId });
     if (!jokes.length) {
-        throw new ApiError(404, "Joke not found");
+        return res.status(200).json(new ApiResponse(200,[], "Joke not created yet"));
     }
     return res
         .status(200)
@@ -158,7 +158,7 @@ const deleteJokeById = asyncHandler(async (req, res) => {
 
 export {
     createJoke,
-    getAllJokes,
+    getPublicJokes,
     getRandomJoke,
     myJokes,
     updateJokeById,

@@ -7,7 +7,7 @@ import { registerUser,loginUser,updateUser,deleteUser, logoutUser, refreshAccess
 import verifyJWT from "../middlewares/auth.middleware.js";
 
 // routes define
-userRouter.post("/",registerUser);
+userRouter.post("/register",registerUser);
 userRouter.post("/refresh-token",refreshAccessToken);
 userRouter.post("/login",loginUser);
 userRouter.post("/logout",verifyJWT,logoutUser);
