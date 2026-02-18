@@ -26,8 +26,13 @@ const createJoke = asyncHandler(async (req, res) => {
 });
 // fetch all jokes
 const getPublicJokes = asyncHandler(async (req, res) => {
-    const { category, page = 1, limit = 4 } = req.query;
+    let { category, page = 1, limit = 10 } = req.query;
+    const MAX_LIMIT = 25;
     let filter = { isPublic: true };
+    limit = Math.min(parseInt(limit), MAX_LIMIT);
+    if (limit < 1) limit = 10;
+    if (page < 1) page = 1;
+    const skip = (page - 1) * limit;
     if (category) {
         filter.category = category;
     }
@@ -35,23 +40,21 @@ const getPublicJokes = asyncHandler(async (req, res) => {
 
     const jokes = await Joke.find(filter)
         .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(parseInt(limit))
+        .skip(skip)
+        .limit(limit)
         .populate("author", "username fullname");
-    return res
-        .status(200)
-        .json(
-            new ApiResponse(
-                200,
-                {
-                    jokes,
-                    totalJokes,
-                    currentPage: page,
-                    totalPages: Math.ceil(totalJokes / limit),
-                },
-                "Public jokes fetched successfully.",
-            ),
-        );
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {
+                jokes,
+                totalJokes,
+                currentPage: page,
+                totalPages: Math.ceil(totalJokes / limit),
+            },
+            "Public jokes fetched successfully.",
+        ),
+    );
 });
 // get a random joke
 const getRandomJoke = asyncHandler(async (req, res) => {
@@ -99,19 +102,48 @@ const getRandomJoke = asyncHandler(async (req, res) => {
 // get logged in user's jokes
 const myJokes = asyncHandler(async (req, res) => {
     const userId = req.user._id;
-    const jokes = await Joke.find({ author: userId });
+    let { category, isPublic, page = 1, limit = 10 } = req.query;
+    const MAX_LIMIT = 25;
+    limit = Math.min(parseInt(limit), MAX_LIMIT);
+    if (limit < 1) limit = 10;
+    if (page < 1) page = 1;
+    const skip = (page - 1) * limit;
+    let filter = {};
+    if (category) filter.category = category;
+    if (isPublic === "true") filter.isPublic = true;
+    else if (isPublic === "false") filter.isPublic = false;
+    const totalJokes = await Joke.countDocuments(filter);
+    const jokes = await Joke.find({ author: userId, ...filter })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
     if (!jokes.length) {
-        return res.status(200).json(new ApiResponse(200,[], "Joke not created yet"));
+        return res
+            .status(200)
+            .json(new ApiResponse(200, [], "Joke not created yet"));
     }
-    return res
-        .status(200)
-        .json(new ApiResponse(200, jokes, "Jokes fetched successfully."));
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {
+                jokes,
+                totalJokes,
+                currentPage: page,
+                totalPages: Math.ceil(totalJokes / limit),
+            },
+            "Jokes fetched successfully.",
+        ),
+    );
 });
 // update joke by id
 const updateJokeById = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { content, category, isPublic } = req.body;
-    if (!content && !category && typeof isPublic === undefined) {
+    if (
+        content === undefined &&
+        category === undefined &&
+        isPublic === undefined
+    ) {
         throw new ApiError(400, "give atleast one field to update!!");
     }
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -126,7 +158,7 @@ const updateJokeById = asyncHandler(async (req, res) => {
     }
     if (content) joke.content = content;
     if (category) joke.category = category;
-    if (typeof isPublic !== undefined) joke.isPublic = isPublic;
+    if (isPublic !== undefined) joke.isPublic = isPublic;
 
     const updatedJoke = await joke.save();
     return res

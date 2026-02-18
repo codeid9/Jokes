@@ -32,12 +32,6 @@ const userSchema = new mongoose.Schema(
             type: String,
             required: [true, "Password is required!"],
         },
-        jokes: [
-            {
-                type: Schema.Types.ObjectId,
-                ref: "Joke",
-            },
-        ],
         refreshToken: {
             type: String,
         },

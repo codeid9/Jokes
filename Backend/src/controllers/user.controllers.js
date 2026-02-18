@@ -3,6 +3,9 @@ import User from "../models/user.modes.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import ApiError from "../utils/ApiError.js";
+import Joke from "../models/joke.models.js";
+import Like from "../models/like.models.js";
+
 
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
@@ -18,7 +21,8 @@ const generateAccessAndRefreshTokens = async (userId) => {
 };
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
-    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
+    const incomingRefreshToken =
+        req.cookies.refreshToken || req.body.refreshToken;
 
     if (!incomingRefreshToken) {
         throw new ApiError(401, "You don't have refresh token!");
@@ -27,7 +31,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     try {
         const decodedToken = jwt.verify(
             incomingRefreshToken,
-            process.env.REFRESH_TOKEN_SECRET
+            process.env.REFRESH_TOKEN_SECRET,
         );
 
         const user = await User.findById(decodedToken?._id);
@@ -40,11 +44,12 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             throw new ApiError(401, "Refresh token has expired or used");
         }
 
-        const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshTokens(user._id);
+        const { accessToken, refreshToken: newRefreshToken } =
+            await generateAccessAndRefreshTokens(user._id);
 
         const options = {
             httpOnly: true,
-            secure: true
+            secure: true,
         };
 
         return res
@@ -53,12 +58,11 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             .cookie("refreshToken", newRefreshToken, options)
             .json(
                 new ApiResponse(
-                    200, 
-                    { accessToken, refreshToken: newRefreshToken }, 
-                    "Token refreshed!"
-                )
+                    200,
+                    { accessToken, refreshToken: newRefreshToken },
+                    "Token refreshed!",
+                ),
             );
-
     } catch (error) {
         throw new ApiError(401, error?.message || "Invalid refresh token");
     }
@@ -173,7 +177,27 @@ const logoutUser = asyncHandler(async (req, res) => {
 
 const updateUser = asyncHandler(async (req, res) => {});
 
-const deleteUser = asyncHandler(async (req, res) => {});
+const deleteUser = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+    if (!user) throw new ApiError(404, "User not fount!");
+    await Joke.deleteMany({ author: userId });
+    await Like.deleteMany({ likedBy: userId });
+    await User.findByIdAndDelete(userId);
+    const options = {
+        httpOnly: true,
+        secure: true,
+    };
+    return res
+        .status(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json(new ApiResponse(200,{},"User Account & all data deleted successfully."));
+});
+
+const getUserStats = asyncHandler(async (req,res) => {
+    res.status(200).json(new ApiResponse(200,{user:req.user},"User Stats fetched."))
+});
 
 export {
     registerUser,
@@ -182,4 +206,5 @@ export {
     updateUser,
     deleteUser,
     refreshAccessToken,
+    getUserStats
 };
