@@ -5,7 +5,7 @@ import ApiResponse from "../utils/ApiResponse.js";
 import ApiError from "../utils/ApiError.js";
 import Joke from "../models/joke.models.js";
 import Like from "../models/like.models.js";
-
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
@@ -192,11 +192,77 @@ const deleteUser = asyncHandler(async (req, res) => {
         .status(200)
         .clearCookie("accessToken", options)
         .clearCookie("refreshToken", options)
-        .json(new ApiResponse(200,{},"User Account & all data deleted successfully."));
+        .json(
+            new ApiResponse(
+                200,
+                {},
+                "User Account & all data deleted successfully.",
+            ),
+        );
 });
 
-const getUserStats = asyncHandler(async (req,res) => {
-    res.status(200).json(new ApiResponse(200,{user:req.user},"User Stats fetched."))
+const getUserStats = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+    const stats = await Joke.aggregate([
+        {
+            $match: {
+                author: new mongoose.Types.ObjectId(userId),
+            },
+        },
+        {
+            $lookup: {
+                from: "likes",
+                localField: "_id",
+                foreignField: "joke",
+                as: "allLikes",
+            },
+        },
+        {
+            $group: {
+                _id: null,
+                totalJokes: { $sum: 1 },
+                totalLikes: { $sum: { $size: "$allLikes" } },
+                publicJokes: {
+                    $sum: { $cond: ["$isPublic", 1, 0] },
+                },
+                privateJokes: {
+                    $sum: { $cond: ["$isPublic", 0, 1] },
+                },
+            },
+        },
+        {
+            $project: {
+                _id: 0,
+                totalJokes: 1,
+                totalLikes: 1,
+                publicJokes: 1,
+                privateJokes: 1,
+            },
+        },
+    ]);
+
+    const finalStats =
+        stats.length > 0
+            ? stats[0]
+            : {
+                  totalJokes: 0,
+                  totalLikes: 0,
+                  publicJokes: 0,
+                  privateJokes: 0,
+              };
+
+    const userSummary = {
+        username: req.user.username,
+        fullname: req.user.fullname,
+        avatar: req.user.avatar,
+    };
+    res.status(200).json(
+        new ApiResponse(
+            200,
+            { stats: finalStats, userSummary },
+            "User Stats fetched.",
+        ),
+    );
 });
 
 export {
@@ -206,5 +272,5 @@ export {
     updateUser,
     deleteUser,
     refreshAccessToken,
-    getUserStats
+    getUserStats,
 };
