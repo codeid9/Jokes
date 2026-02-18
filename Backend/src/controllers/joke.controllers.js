@@ -3,6 +3,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import mongoose from "mongoose";
+import { getPaginationData } from "../utils/pagination.js";
 
 // add a joke into database
 const createJoke = asyncHandler(async (req, res) => {
@@ -26,13 +27,9 @@ const createJoke = asyncHandler(async (req, res) => {
 });
 // fetch all jokes
 const getPublicJokes = asyncHandler(async (req, res) => {
-    let { category, page = 1, limit = 10 } = req.query;
-    const MAX_LIMIT = 25;
+    const { category, page, limit } = req.query;
+    const { limitNumber, pageNumber, skip } = getPaginationData(page, limit);
     let filter = { isPublic: true };
-    limit = Math.min(parseInt(limit), MAX_LIMIT);
-    if (limit < 1) limit = 10;
-    if (page < 1) page = 1;
-    const skip = (page - 1) * limit;
     if (category) {
         filter.category = category;
     }
@@ -41,7 +38,7 @@ const getPublicJokes = asyncHandler(async (req, res) => {
     const jokes = await Joke.find(filter)
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limit)
+        .limit(limitNumber)
         .populate("author", "username fullname");
     return res.status(200).json(
         new ApiResponse(
@@ -49,8 +46,8 @@ const getPublicJokes = asyncHandler(async (req, res) => {
             {
                 jokes,
                 totalJokes,
-                currentPage: page,
-                totalPages: Math.ceil(totalJokes / limit),
+                currentPage: pageNumber,
+                totalPages: Math.ceil(totalJokes / limitNumber),
             },
             "Public jokes fetched successfully.",
         ),
@@ -102,21 +99,18 @@ const getRandomJoke = asyncHandler(async (req, res) => {
 // get logged in user's jokes
 const myJokes = asyncHandler(async (req, res) => {
     const userId = req.user._id;
-    let { category, isPublic, page = 1, limit = 10 } = req.query;
-    const MAX_LIMIT = 25;
-    limit = Math.min(parseInt(limit), MAX_LIMIT);
-    if (limit < 1) limit = 10;
-    if (page < 1) page = 1;
-    const skip = (page - 1) * limit;
+    const { category, isPublic, page, limit } = req.query;
+    const { pageNumber, limitNumber, skip } = getPaginationData(page, limit);
     let filter = {};
     if (category) filter.category = category;
     if (isPublic === "true") filter.isPublic = true;
     else if (isPublic === "false") filter.isPublic = false;
+
     const totalJokes = await Joke.countDocuments(filter);
     const jokes = await Joke.find({ author: userId, ...filter })
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limit);
+        .limit(limitNumber);
     if (!jokes.length) {
         return res
             .status(200)
@@ -128,8 +122,8 @@ const myJokes = asyncHandler(async (req, res) => {
             {
                 jokes,
                 totalJokes,
-                currentPage: page,
-                totalPages: Math.ceil(totalJokes / limit),
+                currentPage: pageNumber,
+                totalPages: Math.ceil(totalJokes / limitNumber),
             },
             "Jokes fetched successfully.",
         ),

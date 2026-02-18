@@ -7,6 +7,7 @@ import Joke from "../models/joke.models.js";
 import Like from "../models/like.models.js";
 import mongoose from "mongoose";
 import { isValidEmail } from "../utils/validators.js";
+import { getPaginationData } from "../utils/pagination.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
@@ -115,8 +116,9 @@ const loginUser = asyncHandler(async (req, res) => {
     if (!(username || email) || !password) {
         throw new ApiError(400, "Credentials are required!!");
     }
-    if(email){
-        if (!isValidEmail(email)) throw new ApiError(400, "Invalid Email Format!");
+    if (email) {
+        if (!isValidEmail(email))
+            throw new ApiError(400, "Invalid Email Format!");
     }
     const user = await User.findOne({
         $or: [{ username }, { email }],
@@ -180,6 +182,31 @@ const logoutUser = asyncHandler(async (req, res) => {
         );
 });
 
+const getAllUsers = asyncHandler(async (req, res) => {
+    const { pageNumber, limitNumber, skip } = getPaginationData(
+        req.query.page,
+        req.query.limit,
+    );
+    const totalUsers = await User.countDocuments();
+    const users = await User.find()
+        .select("username fullname avatar")
+        .limit(limitNumber)
+        .skip(skip);
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {
+                users,
+                totalUsers,
+                currentPage: pageNumber,
+                totalPages: Math.ceil(totalUsers / limitNumber),
+            },
+            "Creators fetched!",
+        ),
+    );
+});
+
 const updateUser = asyncHandler(async (req, res) => {
     const { email, fullname } = req.body;
     if (!fullname && !email) {
@@ -203,7 +230,9 @@ const updateUser = asyncHandler(async (req, res) => {
     if (!user) {
         throw new ApiError(404, "User not found! update failed.");
     }
-    return res.status(200).json(new ApiResponse(200,{user},"Profile update."));
+    return res
+        .status(200)
+        .json(new ApiResponse(200, { user }, "Profile update."));
 });
 
 const deleteUser = asyncHandler(async (req, res) => {
@@ -302,4 +331,5 @@ export {
     deleteUser,
     refreshAccessToken,
     getUserStats,
+    getAllUsers,
 };

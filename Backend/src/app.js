@@ -17,7 +17,7 @@ app.use(
 import jokeRouter from "./routes/joke.routes.js";
 import userRouter from "./routes/user.routes.js";
 import likeRouter from "./routes/like.routes.js";
-import categoryRouter from "./routes/catrgory.routes.js";
+import categoryRouter from "./routes/category.routes.js";
 // routes
 app.use("/api/v1/jokes", jokeRouter);
 app.use("/api/v1/users", userRouter);
