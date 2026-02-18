@@ -12,7 +12,7 @@ userRouter.post("/refresh-token",refreshAccessToken);
 userRouter.post("/login",loginUser);
 userRouter.get("/stats",verifyJWT,getUserStats);
 userRouter.post("/logout",verifyJWT,logoutUser);
-userRouter.post("/update",verifyJWT,updateUser);
+userRouter.patch("/update",verifyJWT,updateUser);
 userRouter.delete("/delete",verifyJWT,deleteUser);
 
 export default userRouter;

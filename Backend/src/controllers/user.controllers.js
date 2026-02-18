@@ -6,6 +6,7 @@ import ApiError from "../utils/ApiError.js";
 import Joke from "../models/joke.models.js";
 import Like from "../models/like.models.js";
 import mongoose from "mongoose";
+import { isValidEmail } from "../utils/validators.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
@@ -77,6 +78,7 @@ const registerUser = asyncHandler(async (req, res) => {
     ) {
         throw new ApiError(400, "All fields are required!");
     }
+    if (!isValidEmail(email)) throw new ApiError(400, "Invalid Email Format!");
     const existedUser = await User.findOne({
         $or: [{ username }, { email }],
     });
@@ -112,6 +114,9 @@ const loginUser = asyncHandler(async (req, res) => {
     const { username, email, password } = req.body;
     if (!(username || email) || !password) {
         throw new ApiError(400, "Credentials are required!!");
+    }
+    if(email){
+        if (!isValidEmail(email)) throw new ApiError(400, "Invalid Email Format!");
     }
     const user = await User.findOne({
         $or: [{ username }, { email }],
@@ -175,7 +180,31 @@ const logoutUser = asyncHandler(async (req, res) => {
         );
 });
 
-const updateUser = asyncHandler(async (req, res) => {});
+const updateUser = asyncHandler(async (req, res) => {
+    const { email, fullname } = req.body;
+    if (!fullname && !email) {
+        throw new ApiError(400, "Change atleast one field!!");
+    }
+    const updateData = {};
+    if (fullname) updateData.fullname = fullname;
+    if (email) {
+        if (!isValidEmail(email))
+            throw new ApiError(400, "Invalid Email Format!");
+        updateData.email = email;
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set: updateData,
+        },
+        { new: true },
+    ).select("-password");
+    if (!user) {
+        throw new ApiError(404, "User not found! update failed.");
+    }
+    return res.status(200).json(new ApiResponse(200,{user},"Profile update."));
+});
 
 const deleteUser = asyncHandler(async (req, res) => {
     const userId = req.user._id;

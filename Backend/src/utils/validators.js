@@ -1,0 +1,10 @@
+// utils/validators.js
+
+export const isValidEmail = (email) => {
+    const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    return emailRegex.test(email);
+};
+
+export const isValidPassword = (password) => {
+    return password.length >= 8; 
+};
