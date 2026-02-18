@@ -4,6 +4,7 @@ import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import mongoose from "mongoose";
 import { getPaginationData } from "../utils/pagination.js";
+import User from "../models/user.modes.js";
 
 // add a joke into database
 const createJoke = asyncHandler(async (req, res) => {
@@ -27,11 +28,15 @@ const createJoke = asyncHandler(async (req, res) => {
 });
 // fetch all jokes
 const getPublicJokes = asyncHandler(async (req, res) => {
-    const { category, page, limit } = req.query;
+    const { user, category, page, limit } = req.query;
     const { limitNumber, pageNumber, skip } = getPaginationData(page, limit);
     let filter = { isPublic: true };
     if (category) {
         filter.category = category;
+    }
+    if (user) {
+        const userId = await User.findOne({ username: user });
+        filter.author = userId;
     }
     const totalJokes = await Joke.countDocuments(filter);
 
@@ -40,6 +45,11 @@ const getPublicJokes = asyncHandler(async (req, res) => {
         .skip(skip)
         .limit(limitNumber)
         .populate("author", "username fullname");
+    if (!jokes.length) {
+        return res
+            .status(200)
+            .json(new ApiResponse(200, [], "Joke not created yet"));
+    }
     return res.status(200).json(
         new ApiResponse(
             200,
