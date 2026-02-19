@@ -6,7 +6,7 @@ import ApiError from "../utils/ApiError.js";
 import Joke from "../models/joke.models.js";
 import Like from "../models/like.models.js";
 import mongoose from "mongoose";
-import { isValidEmail } from "../utils/validators.js";
+import { isValidEmail, isValidPassword } from "../utils/validators.js";
 import { getPaginationData } from "../utils/pagination.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
@@ -83,6 +83,11 @@ const registerUser = asyncHandler(async (req, res) => {
     const existedUser = await User.findOne({
         $or: [{ username }, { email }],
     });
+     if (!isValidPassword(password))
+        throw new ApiError(
+            400,
+            "Password must be greater than or equal to 8 characters long.",
+        );
 
     if (existedUser) {
         throw new ApiError(409, "User already exist.");
@@ -235,6 +240,36 @@ const updateUser = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, { user }, "Profile update."));
 });
 
+const updatePassword = asyncHandler(async (req, res) => {
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+    if (!oldPassword || !newPassword || !confirmPassword)
+        throw new ApiError(404, "All fields are required!");
+
+    if (newPassword !== confirmPassword)
+        throw new ApiError(
+            400,
+            "confirm password doesn't match with new password",
+        );
+
+    if (!isValidPassword(newPassword))
+        throw new ApiError(
+            400,
+            "Password must be greater than or equal to 8 characters long.",
+        );
+
+    const user = await User.findById(req.user?._id);
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+
+    if (!isPasswordCorrect)
+        throw new ApiError(400, "Old password is incorrect!");
+    user.password = newPassword;
+    await user.save({ validateBeforeSave: false });
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "Password Updated successfully."));
+});
+
 const deleteUser = asyncHandler(async (req, res) => {
     const userId = req.user._id;
     const user = await User.findById(userId);
@@ -328,6 +363,7 @@ export {
     loginUser,
     logoutUser,
     updateUser,
+    updatePassword,
     deleteUser,
     refreshAccessToken,
     getUserStats,

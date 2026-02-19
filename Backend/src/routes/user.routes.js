@@ -12,6 +12,7 @@ import {
     refreshAccessToken,
     getUserStats,
     getAllUsers,
+    updatePassword,
 } from "../controllers/user.controllers.js";
 
 // routes define
@@ -22,6 +23,7 @@ userRouter.post("/login", loginUser);
 userRouter.get("/stats", verifyJWT, getUserStats);
 userRouter.post("/logout", verifyJWT, logoutUser);
 userRouter.patch("/update", verifyJWT, updateUser);
+userRouter.patch("/update-pass", verifyJWT, updatePassword);
 userRouter.delete("/delete", verifyJWT, deleteUser);
 
 export default userRouter;
