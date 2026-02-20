@@ -1,8 +1,27 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-    baseURL: "http://localhost:8000/api/v1", 
+    baseURL: import.meta.env.VITE_API_URL, 
     withCredentials: true,
 });
+axiosInstance.interceptors.response.use(
+    (response) => response, 
+    async (error) => {
+        const prevRequest = error?.config;
 
+        if (error?.response?.status === 401 && !prevRequest?.sent) {
+            prevRequest.sent = true;
+
+            try {
+                await axiosInstance.post("/users/refresh-token");
+                console.log("token refreshed");
+                return axiosInstance(prevRequest);
+            } catch (refreshError) {
+                console.error("Refresh token expired, please login again.");
+                return Promise.reject(refreshError);
+            }
+        }
+        return Promise.reject(error);
+    }
+);
 export default axiosInstance;

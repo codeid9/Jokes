@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
-import { useAuth } from "./context/AuthContext.jsx";
+import useAuth from "./hooks/useAuth.js";
 import { Toaster } from "react-hot-toast";
 import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
@@ -10,7 +10,6 @@ import Explore from "./pages/Explore.jsx";
 
 export default function App() {
     const { loading } = useAuth();
-
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-100">

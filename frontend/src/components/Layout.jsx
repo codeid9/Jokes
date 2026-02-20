@@ -1,10 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
 import Avatar from "../assets/avatar.svg";
-import { useAuth } from "../context/AuthContext.jsx";
+import useAuth  from "../hooks/useAuth.js";
 import axiosInstance from "../api/axios.js";
 
 const Layout = ({ children }) => {
     const { user, setUser } = useAuth();
+    
     const navigate = useNavigate();
 
     const handleLogout = async () => {

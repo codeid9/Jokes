@@ -1,10 +1,9 @@
 import { Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import useAuth from "../hooks/useAuth.js";
 import Avatar from "../assets/avatar.svg";
 
 const Navbar = () => {
     const { user } = useAuth();
-
     return (
         <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
