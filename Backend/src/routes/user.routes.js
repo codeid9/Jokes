@@ -13,6 +13,7 @@ import {
     getUserStats,
     getAllUsers,
     updatePassword,
+    getCurrentUser,
 } from "../controllers/user.controllers.js";
 
 // routes define
@@ -25,5 +26,5 @@ userRouter.post("/logout", verifyJWT, logoutUser);
 userRouter.patch("/update", verifyJWT, updateUser);
 userRouter.patch("/update-pass", verifyJWT, updatePassword);
 userRouter.delete("/delete", verifyJWT, deleteUser);
-
+userRouter.route("/current-user").get(verifyJWT, getCurrentUser);
 export default userRouter;

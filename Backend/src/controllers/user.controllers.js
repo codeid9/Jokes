@@ -83,7 +83,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const existedUser = await User.findOne({
         $or: [{ username }, { email }],
     });
-     if (!isValidPassword(password))
+    if (!isValidPassword(password))
         throw new ApiError(
             400,
             "Password must be greater than or equal to 8 characters long.",
@@ -117,16 +117,12 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-    const { username, email, password } = req.body;
-    if (!(username || email) || !password) {
+    const { emailorusername, password } = req.body;
+    if (!emailorusername || !password) {
         throw new ApiError(400, "Credentials are required!!");
     }
-    if (email) {
-        if (!isValidEmail(email))
-            throw new ApiError(400, "Invalid Email Format!");
-    }
     const user = await User.findOne({
-        $or: [{ username }, { email }],
+        $or: [{ username: emailorusername }, { email: emailorusername }],
     });
     if (!user) {
         throw new ApiError(404, "User not registered");
@@ -152,11 +148,11 @@ const loginUser = asyncHandler(async (req, res) => {
         .cookie("accessToken", accessToken, options)
         .cookie("refreshToken", refreshToken, options)
         .json(
-            new ApiResponse(200, "User logged in successfully.", {
+            new ApiResponse(200, {
                 user: loggedInUser,
                 accessToken,
                 refreshToken,
-            }),
+            },"User loggedin successfully."),
         );
 });
 
@@ -358,6 +354,13 @@ const getUserStats = asyncHandler(async (req, res) => {
     );
 });
 
+const getCurrentUser = asyncHandler(async (req, res) => {
+    return res
+        .status(200)
+        .json(new ApiResponse(200, req.user, "Current user fetched successfully!"));
+});
+
+
 export {
     registerUser,
     loginUser,
@@ -368,4 +371,5 @@ export {
     refreshAccessToken,
     getUserStats,
     getAllUsers,
+    getCurrentUser
 };
