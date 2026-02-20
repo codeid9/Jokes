@@ -4,6 +4,8 @@ import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import { useAuth } from "./context/AuthContext.jsx";
+import Register from "./pages/Register.jsx";
+import { Toaster } from "react-hot-toast";
 
 export default function App() {
     const { loading } = useAuth();
@@ -19,20 +21,24 @@ export default function App() {
         );
     }
     return (
-        <Router>
-            <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/" element={<Home />} />
-                <Route
-                    path="/dashboard"
-                    element={
-                        <ProtectedRoute>
-                            <Dashboard />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route path="*" element={<h1>404 Page Not Found!!</h1>} />
-            </Routes>
-        </Router>
+        <>
+            <Toaster position="top-center" reverseOrder={false} />
+            <Router>
+                <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/" element={<Home />} />
+                    <Route
+                        path="/dashboard"
+                        element={
+                            <ProtectedRoute>
+                                <Dashboard />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route path="*" element={<h1>404 Page Not Found!!</h1>} />
+                </Routes>
+            </Router>
+        </>
     );
 }

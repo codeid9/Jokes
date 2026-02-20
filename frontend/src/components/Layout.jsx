@@ -26,6 +26,12 @@ const Layout = ({ children }) => {
                 </div>
                 <nav className="flex-1 p-4 space-y-2">
                     <Link
+                        to="/"
+                        className="block p-3 hover:bg-indigo-600 rounded"
+                    >
+                        Home
+                    </Link>
+                    <Link
                         to="/dashboard"
                         className="block p-3 hover:bg-indigo-600 rounded"
                     >

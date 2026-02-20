@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import axiosInstance from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const Login = () => {
     const [emailorusername, setEmailorusername] = useState("");
@@ -22,8 +24,11 @@ const Login = () => {
                 password,
             });
             setUser(response.data.data.user);
+            toast.success(
+                `Welcome back, ${response.data.data.user.username}! ✨`,
+            );
         } catch (error) {
-            alert(error.response?.data?.message || "Login fail ho gaya! ❌");
+            toast.error("Invalid credentials! 🧐");
         }
     };
 
@@ -65,6 +70,15 @@ const Login = () => {
                         Login 🚀
                     </button>
                 </form>
+                <p className="mt-6 text-center text-gray-600 text-sm">
+                    Don't have an account?{" "}
+                    <Link
+                        to="/register"
+                        className="text-indigo-600 font-bold hover:underline"
+                    >
+                        Sign up
+                    </Link>
+                </p>
             </div>
         </div>
     );
