@@ -4,6 +4,7 @@ import axiosInstance from "../api/axios.js";
 import Navbar from "../components/Navbar.jsx";
 import Pagination from "../components/Pagination.jsx";
 import useCategories from "../hooks/useCategories.js";
+import JokeCard from "../components/JokeCard.jsx";
 
 const Explore = () => {
     const [data, setData] = useState([]);
@@ -97,28 +98,14 @@ const Explore = () => {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {data?.jokes?.map((joke) => (
-                                    <div
-                                        key={joke._id}
-                                        className="bg-white p-6 rounded-2xl shadow-xs hover:shadow-md transition border border-gray-100 flex flex-col justify-between"
-                                    >
-                                        <div>
-                                            <span className="text-xs font-bold uppercase tracking-wider text-indigo-500 bg-indigo-50 px-2 py-1 rounded">
-                                                {joke.category}
-                                            </span>
-                                            <p className="text-gray-800 text-lg mt-4 leading-relaxed font-medium">
-                                                "{joke.content}"
-                                            </p>
-                                        </div>
-                                        <div className="mt-6 pt-4 border-t border-gray-50 flex justify-between items-center text-sm text-gray-500">
-                                            <span>
-                                                By @{joke.author?.username}
-                                            </span>
-                                            <button className="hover:text-red-500 transition">
-                                                ❤️ {joke.likesCount || 0}
-                                            </button>
-                                        </div>
-                                    </div>
+                                {data?.jokes?.map((joke, i) => (
+                                    <JokeCard
+                                        key={i}
+                                        content={joke.content}
+                                        category={joke.category}
+                                        likesCount={joke.likesCount}
+                                        author={joke.author?.username}
+                                    />
                                 ))}
                             </div>
                         )}
