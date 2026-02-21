@@ -3,24 +3,27 @@ import axiosInstance from "../api/axios";
 import Layout from "../components/Layout";
 import toast from "react-hot-toast";
 import JokeModal from "../components/JokeModal.jsx";
+import Pagination from "../components/Pagination.jsx";
 
 const MyJokes = () => {
     const [data, setData] = useState(null);
+    const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedJoke, setSelectedJoke] = useState(null);
 
     const fetchMyJokes = async () => {
         try {
-            const response = await axiosInstance.get("/jokes/my-jokes");
+            const response = await axiosInstance.get(
+                `/jokes/my-jokes?page=${page}&limit=5`,
+            );
             setData(response.data.data);
         } catch (error) {
-            toast.error("Apne jokes load nahi kar paye! ☹️");
+            toast.error("Jokes Loading failed! ☹️");
         } finally {
             setLoading(false);
         }
     };
-
     const handleAddNew = () => {
         setSelectedJoke(null);
         setIsModalOpen(true);
@@ -32,12 +35,7 @@ const MyJokes = () => {
     };
 
     const handleDelete = async (id) => {
-        if (
-            !window.confirm(
-                "Kya aap sach mein ye joke delete karna chahte hain?",
-            )
-        )
-            return;
+        if (!window.confirm("Do you really want to delete this joke?")) return;
 
         try {
             await axiosInstance.delete(`/jokes/${id}`);
@@ -56,14 +54,14 @@ const MyJokes = () => {
                 }));
             }
 
-            toast.success("Joke uda diya gaya! 🗑️");
+            toast.success("Joke Deleted! 🗑️");
         } catch (error) {
             toast.error("Delete fail ho gaya!");
         }
     };
     useEffect(() => {
         fetchMyJokes();
-    }, []);
+    }, [page]);
 
     return (
         <Layout>
@@ -142,6 +140,15 @@ const MyJokes = () => {
                     ))}
                 </div>
             )}
+            {/* pagination component */}
+            {!loading ? (
+                <Pagination
+                    currentPage={data.currentPage}
+                    totalPages={data.totalPages}
+                    onPageChange={(newPage) => setPage(newPage)}
+                />
+            ) : null}
+            {/* popup modal comp */}
             <JokeModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}

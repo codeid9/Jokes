@@ -38,7 +38,6 @@ const JokeModal = ({ isOpen, onClose, fetchJokes, editData = null }) => {
                     isPublic,
                 });
                 toast.success("Joke updated! ✨", { id: toastId });
-                console.log("edit");
             } else {
                 // Create Logic
                 await axiosInstance.post("/jokes", {
