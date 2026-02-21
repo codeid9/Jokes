@@ -41,12 +41,11 @@ const JokeModal = ({ isOpen, onClose, fetchJokes, editData = null }) => {
                 console.log("edit");
             } else {
                 // Create Logic
-                const res = await axiosInstance.post("/jokes", {
+                await axiosInstance.post("/jokes", {
                     content,
                     category,
                     isPublic,
                 });
-                console.log(res);
                 toast.success("Joke added! 🚀", { id: toastId });
             }
             fetchJokes(); //fetch jokes
