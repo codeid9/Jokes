@@ -4,6 +4,7 @@ import Layout from "../components/Layout";
 import toast from "react-hot-toast";
 import JokeModal from "../components/JokeModal.jsx";
 import Pagination from "../components/Pagination.jsx";
+import useCategories from "../hooks/useCategories.js";
 
 const MyJokes = () => {
     const [data, setData] = useState(null);
@@ -11,11 +12,13 @@ const MyJokes = () => {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedJoke, setSelectedJoke] = useState(null);
+    const [category, setCategory] = useState("");
+    const { categories } = useCategories();
 
     const fetchMyJokes = async () => {
         try {
             const response = await axiosInstance.get(
-                `/jokes/my-jokes?page=${page}&limit=5`,
+                `/jokes/my-jokes?page=${page}&category=${category}&limit=5`,
             );
             setData(response.data.data);
         } catch (error) {
@@ -61,25 +64,33 @@ const MyJokes = () => {
     };
     useEffect(() => {
         fetchMyJokes();
-    }, [page]);
+    }, [page, category]);
 
     return (
         <Layout>
             <div className="flex justify-between items-center mb-8">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-800">
-                        My Jokes ✍️
-                    </h1>
-                    <p className="text-gray-500 text-sm">
-                        Aapke saare kalesh aur jokes yahan hain.
-                    </p>
-                </div>
                 <button
                     onClick={() => handleAddNew()}
                     className="cursor-pointer border-2 border-blue-500 rounded-xl py-2 px-4 bg-blue-700 text-white"
                 >
                     Add Joke
                 </button>
+                <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="outline-hidden cursor-pointer border-2 border-blue-500 rounded-xl py-2 px-4 bg-blue-700 text-white"
+                >
+                    <option value="" disabled hidden>
+                        --Select--
+                    </option>
+                    <option value="">All</option>
+                    {categories.length &&
+                        categories.map((cat, i) => (
+                            <option value={cat} key={i}>
+                                {cat}
+                            </option>
+                        ))}
+                </select>
             </div>
 
             {loading ? (

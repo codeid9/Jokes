@@ -15,7 +15,7 @@ const Explore = () => {
     const fetchJokes = async () => {
         setLoading(true);
         try {
-            // Backend route: /jokes?page=1&category=Coding&user=tom
+            // Backend route: /jokes?page=1&category=Coding
             const { data } = await axiosInstance.get(
                 `/jokes/public?page=${page}&category=${category}`,
             );
@@ -45,7 +45,7 @@ const Explore = () => {
                 </header>
 
                 {/* Category Filters (Chips) */}
-                <div className="flex flex-wrap gap-3  mb-8 justify-center">
+                <div className="flex gap-3 px-4 h-10  mb-8  scrollbar-hide overflow-x-auto border-x-2">
                     <button
                         onClick={() => {
                             setCategory("");
@@ -66,7 +66,7 @@ const Explore = () => {
                                 setCategory(cat);
                                 setPage(1);
                             }}
-                            className={`px-5 py-2 capitalize rounded-full font-medium transition ${
+                            className={`px-5 py-2  text-nowrap capitalize rounded-full font-medium transition ${
                                 category === cat
                                     ? "bg-indigo-600 text-white shadow-lg"
                                     : "bg-white text-gray-600 hover:bg-indigo-50 border border-gray-200"
