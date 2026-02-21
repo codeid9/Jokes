@@ -6,7 +6,7 @@ import useCategories from "../hooks/useCategories.js";
 const JokeModal = ({ isOpen, onClose, fetchJokes, editData = null }) => {
     const { categories } = useCategories();
     const [content, setContent] = useState("");
-    const [category, setCategory] = useState("funny");
+    const [category, setCategory] = useState("general");
     const [isPublic, setIsPublic] = useState(true);
     const [loading, setLoading] = useState(false);
     // Agar editData aaya hai (matlab Edit mode hai), toh values set kar do
@@ -17,7 +17,7 @@ const JokeModal = ({ isOpen, onClose, fetchJokes, editData = null }) => {
             setIsPublic(editData.isPublic);
         } else {
             setContent("");
-            setCategory("funny");
+            setCategory("general");
             setIsPublic(true);
         }
     }, [editData, isOpen]);

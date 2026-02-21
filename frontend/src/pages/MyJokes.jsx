@@ -94,7 +94,7 @@ const MyJokes = () => {
             ) : data?.jokes?.length === 0 ? (
                 <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-300">
                     <p className="text-gray-400 text-lg font-medium">
-                        Abhi tak koi joke nahi likha? 🧐
+                        Jokes not created yet! 🧐
                     </p>
                 </div>
             ) : (
