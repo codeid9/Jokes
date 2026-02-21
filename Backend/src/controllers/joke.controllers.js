@@ -8,13 +8,16 @@ import User from "../models/user.modes.js";
 
 // add a joke into database
 const createJoke = asyncHandler(async (req, res) => {
-    const { content, category } = req.body;
+    const { content, category, isPublic } = req.body;
     if (!content || content.trim() === "") {
         throw new ApiError(400, "joke is required!!");
     }
+    if (content.length <= 10)
+        throw new ApiError(400, "Joke Must be greater than 10 chars long");
 
     let joke = {
         content: content.trim(),
+        isPublic: isPublic,
         author: req.user._id,
     };
     if (category) {
@@ -46,9 +49,18 @@ const getPublicJokes = asyncHandler(async (req, res) => {
         .limit(limitNumber)
         .populate("author", "username fullname");
     if (!jokes.length) {
-        return res
-            .status(200)
-            .json(new ApiResponse(200, [], "Joke not created yet"));
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                {
+                    jokes,
+                    totalJokes,
+                    currentPage: pageNumber,
+                    totalPages: Math.ceil(totalJokes / limitNumber),
+                },
+                "Joke not created yet",
+            ),
+        );
     }
     return res.status(200).json(
         new ApiResponse(
@@ -111,7 +123,7 @@ const myJokes = asyncHandler(async (req, res) => {
     const userId = req.user._id;
     const { category, isPublic, page, limit } = req.query;
     const { pageNumber, limitNumber, skip } = getPaginationData(page, limit);
-    let filter = {};
+    let filter = { author: userId };
     if (category) filter.category = category;
     if (isPublic === "true") filter.isPublic = true;
     else if (isPublic === "false") filter.isPublic = false;
@@ -122,9 +134,18 @@ const myJokes = asyncHandler(async (req, res) => {
         .skip(skip)
         .limit(limitNumber);
     if (!jokes.length) {
-        return res
-            .status(200)
-            .json(new ApiResponse(200, [], "Joke not created yet"));
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                {
+                    jokes,
+                    totalJokes,
+                    currentPage: pageNumber,
+                    totalPages: Math.ceil(totalJokes / limitNumber),
+                },
+                "Joke not created yet",
+            ),
+        );
     }
     return res.status(200).json(
         new ApiResponse(

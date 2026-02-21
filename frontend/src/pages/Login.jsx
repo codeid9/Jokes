@@ -28,7 +28,8 @@ const Login = () => {
                 `Welcome back, ${response.data.data.user.username}! ✨`,
             );
         } catch (error) {
-            toast.error("Invalid credentials! 🧐");
+            console.error(error);
+            toast.error("Login failed!");
         }
     };
 

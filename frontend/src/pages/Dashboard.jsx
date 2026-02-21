@@ -49,31 +49,39 @@ const Dashboard = () => {
         },
     ];
 
-    if (loading) {
-        return <>loading...</>;
-    }
     return (
         <Layout>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {statCards.map((card, index) => (
-                    <div
-                        key={index}
-                        className={`bg-white p-6 rounded-xl shadow-xs border-l-6 ${card.color} hover:shadow-md transition-shadow`}
-                    >
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">
-                                    {card.label}
-                                </p>
-                                <h3 className="text-3xl font-extrabold text-gray-800">
-                                    {card.value || 0}
-                                </h3>
+            {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {[1, 2, 3, 4].map((_, index) => (
+                        <div
+                            key={index}
+                            className={`bg-white p-6 rounded-xl shadow-xs h-24 `}
+                        ></div>
+                    ))}
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {statCards.map((card, index) => (
+                        <div
+                            key={index}
+                            className={`bg-white p-6 rounded-xl shadow-xs border-l-6 ${card.color} hover:shadow-md transition-shadow`}
+                        >
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">
+                                        {card.label}
+                                    </p>
+                                    <h3 className="text-3xl font-extrabold text-gray-800">
+                                        {card.value || 0}
+                                    </h3>
+                                </div>
+                                <span className="text-2xl">{card.icon}</span>
                             </div>
-                            <span className="text-2xl">{card.icon}</span>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
         </Layout>
     );
 };

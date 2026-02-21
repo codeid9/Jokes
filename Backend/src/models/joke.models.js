@@ -11,18 +11,21 @@ const jokeSchema = new mongoose.Schema(
         },
         category: {
             type: String,
-            enum: [
-                "programming",
-                "general",
-                "knock-knock",
-                "humor",
-                "funny",
-                "sarcasm",
-                "nerdy",
-                "desi",
-                "school",
-                "office",
-            ],
+            enum: {
+                values: [
+                    "programming",
+                    "general",
+                    "knock-knock",
+                    "humor",
+                    "funny",
+                    "sarcasm",
+                    "nerdy",
+                    "desi",
+                    "school",
+                    "office",
+                ],
+                message: "Wrong category! ",
+            },
             default: "general",
         },
         tag: {

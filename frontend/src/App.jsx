@@ -6,7 +6,9 @@ import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import MyJokes from "./pages/MyJokes.jsx";
 import Explore from "./pages/Explore.jsx";
+import Profile from "./pages/Profile.jsx";
 
 export default function App() {
     const { loading } = useAuth();
@@ -37,6 +39,23 @@ export default function App() {
                             </ProtectedRoute>
                         }
                     />
+                    <Route
+                        path="/dashboard/jokes"
+                        element={
+                            <ProtectedRoute>
+                                <MyJokes />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/dashboard/profile"
+                        element={
+                            <ProtectedRoute>
+                                <Profile />
+                            </ProtectedRoute>
+                        }
+                    />
+
                     <Route path="*" element={<h1>404 Page Not Found!!</h1>} />
                 </Routes>
             </Router>

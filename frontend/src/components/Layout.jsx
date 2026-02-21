@@ -1,11 +1,10 @@
 import { Link, useNavigate } from "react-router-dom";
 import Avatar from "../assets/avatar.svg";
-import useAuth  from "../hooks/useAuth.js";
+import useAuth from "../hooks/useAuth.js";
 import axiosInstance from "../api/axios.js";
 
 const Layout = ({ children }) => {
     const { user, setUser } = useAuth();
-    
     const navigate = useNavigate();
 
     const handleLogout = async () => {
@@ -18,38 +17,43 @@ const Layout = ({ children }) => {
         }
     };
 
+    const sidebarLinks = [
+        {
+            route: "/",
+            label: "Home",
+        },
+        {
+            route: "/dashboard",
+            label: "Dashboard",
+        },
+        {
+            route: "/dashboard/jokes",
+            label: "My Jokes",
+        },
+        {
+            route: "/dashboard/profile",
+            label: "Profile Settings",
+        },
+    ];
+
     return (
-        <div className="flex min-h-screen">
+        <div className="flex h-screen">
             {/* Sidebar */}
             <aside className="w-64 bg-indigo-700 text-white flex flex-col">
                 <div className="p-6 text-2xl font-bold border-b border-indigo-500">
                     Joker App 🤡
                 </div>
                 <nav className="flex-1 p-4 space-y-2">
-                    <Link
-                        to="/"
-                        className="block p-3 hover:bg-indigo-600 rounded"
-                    >
-                        Home
-                    </Link>
-                    <Link
-                        to="/dashboard"
-                        className="block p-3 hover:bg-indigo-600 rounded"
-                    >
-                        Dashboard
-                    </Link>
-                    <Link
-                        to="/my-jokes"
-                        className="block p-3 hover:bg-indigo-600 rounded"
-                    >
-                        My Jokes
-                    </Link>
-                    <Link
-                        to="/profile"
-                        className="block p-3 hover:bg-indigo-600 rounded"
-                    >
-                        Profile Settings
-                    </Link>
+                    {sidebarLinks &&
+                        sidebarLinks.map(({ route, label }, index) => (
+                            <Link
+                                to={route}
+                                key={index}
+                                className="block p-3 hover:bg-indigo-600 rounded"
+                            >
+                                {label}
+                            </Link>
+                        ))}
                 </nav>
                 <button
                     onClick={handleLogout}
@@ -62,7 +66,7 @@ const Layout = ({ children }) => {
             {/* Main Content Area */}
             <main className="flex-1">
                 {/* Header */}
-                <header className="bg-white shadow-sm p-4 flex justify-between items-center px-8">
+                <header className="bg-white shadow-sm h-18 flex justify-between items-center px-8">
                     <h2 className="text-xl font-semibold text-gray-700">
                         Welcome, {user?.username}
                     </h2>
@@ -74,7 +78,9 @@ const Layout = ({ children }) => {
                 </header>
 
                 {/* Page Content */}
-                <div className="p-8">{children}</div>
+                <div className="p-8 overflow-y-auto scrollbar-hide  h-[calc(100vh-4.5rem)]">
+                    {children}
+                </div>
             </main>
         </div>
     );
