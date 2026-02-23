@@ -32,10 +32,6 @@ const jokeSchema = new mongoose.Schema(
             type: [String],
             default: [],
         },
-        likes: {
-            type: Number,
-            default: 0,
-        },
         isPublic: {
             type: Boolean,
             default: true,

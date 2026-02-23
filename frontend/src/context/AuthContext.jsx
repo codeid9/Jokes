@@ -12,6 +12,7 @@ export const AuthProvider = ({ children }) => {
             const response = await axiosInstance.get("/users/current-user");
             setUser(response.data.data);
         } catch (error) {
+            console.log(error);
             setUser(null);
         } finally {
             setLoading(false);
@@ -23,7 +24,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, setUser, loading }}>
+        <AuthContext.Provider value={{ user,setUser, loading }}>
             {children}
         </AuthContext.Provider>
     );

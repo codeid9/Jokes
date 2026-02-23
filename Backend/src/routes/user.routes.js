@@ -1,5 +1,5 @@
 import { Router } from "express";
-import verifyJWT from "../middlewares/auth.middleware.js";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
 const userRouter = Router();
@@ -19,7 +19,7 @@ import {
 
 // routes define
 userRouter.get("/", getAllUsers);
-userRouter.post("/register",upload.single("avatar"), registerUser);
+userRouter.post("/register", upload.single("avatar"), registerUser);
 userRouter.post("/refresh-token", refreshAccessToken);
 userRouter.post("/login", loginUser);
 userRouter.get("/stats", verifyJWT, getUserStats);

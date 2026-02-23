@@ -18,7 +18,6 @@ axiosInstance.interceptors.response.use(
                 await axiosInstance.post("/users/refresh-token");
                 return axiosInstance(prevRequest);
             } catch (refreshError) {
-                console.error("Refresh token expired, please login again.");
                 return Promise.reject(refreshError);
             }
         }

@@ -6,6 +6,7 @@ export const CategoryContext = createContext();
 const CategoryProvider = ({ children }) => {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const fetchCategories = async () => {
         try {
@@ -13,6 +14,7 @@ const CategoryProvider = ({ children }) => {
             setCategories(data.data);
         } catch (error) {
             console.error("Categories fetch fail!", error);
+            setError("Category fetch fail!");
         } finally {
             setLoading(false);
         }
@@ -23,7 +25,7 @@ const CategoryProvider = ({ children }) => {
     }, []);
 
     return (
-        <CategoryContext.Provider value={{ categories, loading }}>
+        <CategoryContext.Provider value={{ categories, loading,error }}>
             {children}
         </CategoryContext.Provider>
     );

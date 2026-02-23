@@ -33,46 +33,74 @@ const createJoke = asyncHandler(async (req, res) => {
 const getPublicJokes = asyncHandler(async (req, res) => {
     const { user, category, page, limit } = req.query;
     const { limitNumber, pageNumber, skip } = getPaginationData(page, limit);
+
     let filter = { isPublic: true };
+
     if (category) {
         filter.category = category;
     }
+
     if (user) {
-        const userId = await User.findOne({ username: user });
-        filter.author = userId;
+        const foundUser = await User.findOne({ username: user });
+        if (foundUser) filter.author = foundUser._id;
     }
+
+    const jokesAggregation = await Joke.aggregate([
+        { $match: filter }, 
+        {
+            $lookup: {
+                from: "likes",
+                localField: "_id",
+                foreignField: "joke",
+                as: "jokeLikes"
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "author",
+                foreignField: "_id",
+                as: "authorDetails"
+            }
+        },
+        { $unwind: "$authorDetails" },
+        {
+            $addFields: {
+                likesCount: { $size: "$jokeLikes" },
+                isLiked: {
+                    $cond: {
+                        if: { $in: [req.user?._id, "$jokeLikes.likedBy"] },
+                        then: true,
+                        else: false
+                    }
+                }
+            }
+        },
+        { $sort: { createdAt: -1 } }, 
+        { $skip: skip },              
+        { $limit: limitNumber },      
+        {
+            $project: {
+                jokeLikes: 0,
+                "authorDetails.password": 0,
+                "authorDetails.refreshToken": 0
+            }
+        }
+    ]);
+
     const totalJokes = await Joke.countDocuments(filter);
 
-    const jokes = await Joke.find(filter)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limitNumber)
-        .populate("author", "username fullname");
-    if (!jokes.length) {
-        return res.status(200).json(
-            new ApiResponse(
-                200,
-                {
-                    jokes,
-                    totalJokes,
-                    currentPage: pageNumber,
-                    totalPages: Math.ceil(totalJokes / limitNumber),
-                },
-                "Joke not created yet",
-            ),
-        );
-    }
     return res.status(200).json(
         new ApiResponse(
             200,
             {
-                jokes,
+                jokes: jokesAggregation,
                 totalJokes,
                 currentPage: pageNumber,
                 totalPages: Math.ceil(totalJokes / limitNumber),
             },
-            "Public jokes fetched successfully.",
-        ),
+            "Public jokes with likes fetched successfully."
+        )
     );
 });
 // get a random joke

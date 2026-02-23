@@ -15,7 +15,6 @@ const toggleJokeLike = asyncHandler(async (req, res) => {
         likedBy: req.user._id,
     });
     
-    console.log(alreadyLiked);
     if (alreadyLiked) {
         await Like.findByIdAndDelete(alreadyLiked._id);
 
@@ -25,7 +24,7 @@ const toggleJokeLike = asyncHandler(async (req, res) => {
                 new ApiResponse(
                     200,
                     { isLiked: false },
-                    "Unliked successfully",
+                    "Unliked",
                 ),
             );
     }
@@ -41,7 +40,7 @@ const toggleJokeLike = asyncHandler(async (req, res) => {
             new ApiResponse(
                 200,
                 { isLiked: true, newLike },
-                "Liked successfully",
+                "Liked",
             ),
         );
 });

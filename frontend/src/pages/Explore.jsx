@@ -3,30 +3,42 @@ import toast from "react-hot-toast";
 import axiosInstance from "../api/axios.js";
 import Navbar from "../components/Navbar.jsx";
 import Pagination from "../components/Pagination.jsx";
-import useCategories from "../hooks/useCategories.js";
 import JokeCard from "../components/JokeCard.jsx";
+import CategoryChips from "../components/CategoryChips.jsx";
 
 const Explore = () => {
-    const [data, setData] = useState([]);
+    const [data, setData] = useState({
+        jokes: [],
+        currentPage: 1,
+        totalPages: 1,
+    });
     const [loading, setLoading] = useState(true);
     const [category, setCategory] = useState("");
     const [page, setPage] = useState(1);
-    const { categories } = useCategories();
+    const [error, setError] = useState(null);
+    const handleCategory = (cat) => {
+        setCategory(cat);
+        setPage(1);
+    };
 
     const fetchJokes = async () => {
         setLoading(true);
+        setError(null);
+
         try {
-            // Backend route: /jokes?page=1&category=Coding
-            const { data } = await axiosInstance.get(
+            const response = await axiosInstance.get(
                 `/jokes/public?page=${page}&category=${category}`,
             );
-            setData(data.data);
+            setData(response.data.data);
         } catch (error) {
-            toast.error("Jokes loading failed! ☹️");
+            console.error("Fetch Error:", error.message);
+            setError("Jokes Fetch Fail! Please try again.");
+            toast.error("Failed to load jokes!");
         } finally {
             setLoading(false);
         }
     };
+
     useEffect(() => {
         fetchJokes();
     }, [page, category]);
@@ -46,77 +58,75 @@ const Explore = () => {
                 </header>
 
                 {/* Category Filters (Chips) */}
-                <div className="flex gap-3 px-4 h-10  mb-8  scrollbar-hide overflow-x-auto border-x-2">
-                    <button
-                        onClick={() => {
-                            setCategory("");
-                            setPage(1);
-                        }}
-                        className={`px-5 py-2 capitalize rounded-full font-medium transition ${
-                            category === "all"
-                                ? "bg-indigo-600 text-white shadow-lg"
-                                : "bg-white text-gray-600 hover:bg-indigo-50 border border-gray-200"
-                        }`}
-                    >
-                        All
-                    </button>
-                    {categories.map((cat) => (
-                        <button
-                            key={cat}
-                            onClick={() => {
-                                setCategory(cat);
-                                setPage(1);
-                            }}
-                            className={`px-5 py-2  text-nowrap capitalize rounded-full font-medium transition ${
-                                category === cat
-                                    ? "bg-indigo-600 text-white shadow-lg"
-                                    : "bg-white text-gray-600 hover:bg-indigo-50 border border-gray-200"
-                            }`}
-                        >
-                            {cat === "" ? "All" : cat}
-                        </button>
-                    ))}
-                </div>
+                <CategoryChips
+                    category={category}
+                    onCategoryChange={handleCategory}
+                />
 
-                {/* Jokes Grid */}
-                {loading ? (
+                {/* Main Content Area */}
+                {error ? (
+                    <div className="text-center py-10">
+                        <h1 className="text-red-500 text-xl font-bold">
+                            {error}
+                        </h1>
+                        <button
+                            onClick={fetchJokes}
+                            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                ) : loading ? (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
                         {[1, 2, 3, 4, 5, 6].map((i) => (
                             <div
                                 key={i}
-                                className="h-48 bg-gray-200 rounded-2xl"
+                                className="h-48 bg-gray-300 rounded-2xl"
                             ></div>
                         ))}
                     </div>
                 ) : (
                     <div>
-                        {data?.jokes.length === 0 ? (
+                        {data.jokes?.length === 0 ? (
                             <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-300">
                                 <p className="text-gray-400 text-lg font-medium">
                                     Jokes Not Found! 🧐
                                 </p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {data?.jokes?.map((joke, i) => (
-                                    <JokeCard
-                                        key={i}
-                                        content={joke.content}
-                                        category={joke.category}
-                                        likesCount={joke.likesCount}
-                                        author={joke.author?.username}
-                                    />
-                                ))}
-                            </div>
+                            <>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {data.jokes.map((joke) => (
+                                        <JokeCard
+                                            key={joke._id}
+                                            jokeId={joke._id}
+                                            content={joke.content}
+                                            category={joke.category}
+                                            likesCount={joke.likesCount}
+                                            isLiked={joke.isLiked}
+                                            author={
+                                                joke.authorDetails?.username
+                                            }
+                                        />
+                                    ))}
+                                </div>
+
+                                {/* 3. Pagination sirf tabhi dikhega jab data ho aur loading/error na ho */}
+                                {data.totalPages > 1 && (
+                                    <div className="mt-8">
+                                        <Pagination
+                                            currentPage={data.currentPage}
+                                            totalPages={data.totalPages}
+                                            onPageChange={(newPage) =>
+                                                setPage(newPage)
+                                            }
+                                        />
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 )}
-                {/* pagination */}
-                <Pagination
-                    currentPage={data.currentPage}
-                    totalPages={data.totalPages}
-                    onPageChange={(newPage) => setPage(newPage)}
-                />
             </main>
         </div>
     );
