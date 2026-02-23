@@ -15,11 +15,13 @@ import {
     getAllUsers,
     updatePassword,
     getCurrentUser,
+    updateUserAvatar,
 } from "../controllers/user.controllers.js";
 
 // routes define
 userRouter.get("/", getAllUsers);
 userRouter.post("/register", upload.single("avatar"), registerUser);
+userRouter.patch("/avatar",verifyJWT,upload.single("avatar"),updateUserAvatar);
 userRouter.post("/refresh-token", refreshAccessToken);
 userRouter.post("/login", loginUser);
 userRouter.get("/stats", verifyJWT, getUserStats);

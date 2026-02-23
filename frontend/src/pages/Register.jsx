@@ -10,7 +10,6 @@ const Register = () => {
         email: "",
         password: "",
     });
-    const [avatar, setAvatar] = useState(null);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
@@ -18,16 +17,12 @@ const Register = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleFileChange = (e) => {
-        setAvatar(e.target.files[0]);
-    };
-
+ 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         const loadingToast = toast.loading("Registering you... 🕒");
 
-        if (avatar) setFormData({ ...formData, ["avatar"]: avatar });
         const data = new FormData(e.target);
         try {
             await axiosInstance.post("/users/register", data, {
@@ -89,17 +84,6 @@ const Register = () => {
                         required
                     />
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Profile Picture (Avatar)
-                        </label>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-                            onChange={handleFileChange}
-                        />
-                    </div>
 
                     <button
                         type="submit"

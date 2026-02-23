@@ -1,11 +1,13 @@
+import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
+import uploadOnCloudinary from "../utils/cloudinary.js";
+import {v2 as cloudinary} from "cloudinary";
 import User from "../models/user.modes.js";
+import Joke from "../models/joke.models.js";
+import Like from "../models/like.models.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import ApiError from "../utils/ApiError.js";
-import Joke from "../models/joke.models.js";
-import Like from "../models/like.models.js";
-import mongoose from "mongoose";
 import { isValidEmail, isValidPassword } from "../utils/validators.js";
 import { getPaginationData } from "../utils/pagination.js";
 
@@ -116,6 +118,45 @@ const registerUser = asyncHandler(async (req, res) => {
         );
 });
 
+const updateUserAvatar = asyncHandler(async (req, res) => {
+    const avatarLocalPath = req.file?.path;
+    if (!avatarLocalPath) {
+        throw new ApiError(400, "Avatar file is missing.");
+    }
+
+    const user = await User.findById(req.user?._id);
+    const oldAvatarUrl = user?.avatar;
+
+    if (oldAvatarUrl) {
+        try {
+            const publicId = oldAvatarUrl.split("/").pop().split(".")[0];
+            await cloudinary.uploader.destroy(publicId);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    const avatar = await uploadOnCloudinary(avatarLocalPath);
+
+    if (!avatar.url) {
+        throw new ApiError(400, "Error while uploading on Cloudinary");
+    }
+
+    const updateduser = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                avatar: avatar.url,
+            },
+        },
+        { new: true },
+    ).select("-password");
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, updateduser, "Avatar updated"));
+});
+
 const loginUser = asyncHandler(async (req, res) => {
     const { emailorusername, password } = req.body;
     if (!emailorusername || !password) {
@@ -148,11 +189,15 @@ const loginUser = asyncHandler(async (req, res) => {
         .cookie("accessToken", accessToken, options)
         .cookie("refreshToken", refreshToken, options)
         .json(
-            new ApiResponse(200, {
-                user: loggedInUser,
-                accessToken,
-                refreshToken,
-            },"User loggedin successfully."),
+            new ApiResponse(
+                200,
+                {
+                    user: loggedInUser,
+                    accessToken,
+                    refreshToken,
+                },
+                "User loggedin successfully.",
+            ),
         );
 });
 
@@ -357,9 +402,14 @@ const getUserStats = asyncHandler(async (req, res) => {
 const getCurrentUser = asyncHandler(async (req, res) => {
     return res
         .status(200)
-        .json(new ApiResponse(200, req.user, "Current user fetched successfully!"));
+        .json(
+            new ApiResponse(
+                200,
+                req.user,
+                "Current user fetched successfully!",
+            ),
+        );
 });
-
 
 export {
     registerUser,
@@ -371,5 +421,6 @@ export {
     refreshAccessToken,
     getUserStats,
     getAllUsers,
-    getCurrentUser
+    getCurrentUser,
+    updateUserAvatar,
 };
