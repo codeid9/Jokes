@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import uploadOnCloudinary from "../utils/cloudinary.js";
-import {v2 as cloudinary} from "cloudinary";
+import { v2 as cloudinary } from "cloudinary";
 import User from "../models/user.modes.js";
 import Joke from "../models/joke.models.js";
 import Like from "../models/like.models.js";
@@ -183,6 +183,7 @@ const loginUser = asyncHandler(async (req, res) => {
     const options = {
         httpOnly: true,
         secure: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
     };
     return res
         .status(200)
@@ -285,7 +286,12 @@ const updatePassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword, confirmPassword } = req.body;
     if (!oldPassword || !newPassword || !confirmPassword)
         throw new ApiError(404, "All fields are required!");
-
+    if (oldPassword === newPassword)
+        throw new ApiError(
+            400,
+            "new password should be diffrent from old password!",
+        );
+    console.log(oldPassword, newPassword);
     if (newPassword !== confirmPassword)
         throw new ApiError(
             400,
@@ -318,6 +324,17 @@ const deleteUser = asyncHandler(async (req, res) => {
     await Joke.deleteMany({ author: userId });
     await Like.deleteMany({ likedBy: userId });
     await User.findByIdAndDelete(userId);
+
+    const oldAvatarUrl = user.avatar;
+    if (oldAvatarUrl) {
+        try {
+            const publicId = oldAvatarUrl.split("/").pop().split(".")[0];
+            await cloudinary.uploader.destroy(publicId);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     const options = {
         httpOnly: true,
         secure: true,
