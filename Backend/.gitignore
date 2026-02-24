@@ -6,3 +6,4 @@
 testApi
 *.http
 *.rest
+/seed
