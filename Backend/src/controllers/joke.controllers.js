@@ -32,7 +32,7 @@ const createJoke = asyncHandler(async (req, res) => {
 // fetch all jokes
 const getPublicJokes = asyncHandler(async (req, res) => {
     const { user, category, page, limit } = req.query;
-    const { limitNumber, pageNumber, skip } = getPaginationData(page, limit);
+    const { limitNumber, pageNumber } = getPaginationData(page, limit);
 
     let filter = { isPublic: true };
 
@@ -47,6 +47,7 @@ const getPublicJokes = asyncHandler(async (req, res) => {
 
     const jokesAggregation = await Joke.aggregate([
         { $match: filter }, 
+        { $sample: { size: limitNumber } }, 
         {
             $lookup: {
                 from: "likes",
@@ -63,7 +64,7 @@ const getPublicJokes = asyncHandler(async (req, res) => {
                 as: "authorDetails"
             }
         },
-        { $unwind: "$authorDetails" },
+        { $unwind: { path: "$authorDetails", preserveNullAndEmptyArrays: true } },
         {
             $addFields: {
                 likesCount: { $size: "$jokeLikes" },
@@ -76,9 +77,6 @@ const getPublicJokes = asyncHandler(async (req, res) => {
                 }
             }
         },
-        { $sort: { createdAt: -1 } }, 
-        { $skip: skip },              
-        { $limit: limitNumber },      
         {
             $project: {
                 jokeLikes: 0,
@@ -99,7 +97,7 @@ const getPublicJokes = asyncHandler(async (req, res) => {
                 currentPage: pageNumber,
                 totalPages: Math.ceil(totalJokes / limitNumber),
             },
-            "Public jokes with likes fetched successfully."
+            "Random public jokes fetched successfully."
         )
     );
 });
