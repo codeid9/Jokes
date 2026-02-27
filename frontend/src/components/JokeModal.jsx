@@ -9,7 +9,7 @@ const JokeModal = ({ isOpen, onClose, fetchJokes, editData = null }) => {
     const [category, setCategory] = useState("general");
     const [isPublic, setIsPublic] = useState(true);
     const [loading, setLoading] = useState(false);
-    // Agar editData aaya hai (matlab Edit mode hai), toh values set kar do
+
     useEffect(() => {
         if (editData) {
             setContent(editData.content);
@@ -24,36 +24,24 @@ const JokeModal = ({ isOpen, onClose, fetchJokes, editData = null }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (content.trim().length < 10) return toast.error("Brevity is wit, but a joke needs at least 10 characters!");
+        
         setLoading(true);
-        const toastId = toast.loading(
-            editData ? "Updating joke..." : "Creating joke...",
-        );
+        const toastId = toast.loading(editData ? "Updating your masterpiece..." : "Spreading the laughter...");
 
         try {
+            const payload = { content, category, isPublic };
             if (editData) {
-                // Update Logic
-                await axiosInstance.patch(`/jokes/${editData._id}`, {
-                    content,
-                    category,
-                    isPublic,
-                });
-                toast.success("Joke updated! ✨", { id: toastId });
+                await axiosInstance.patch(`/jokes/${editData._id}`, payload);
+                toast.success("Punchline updated! ✨", { id: toastId });
             } else {
-                // Create Logic
-                await axiosInstance.post("/jokes", {
-                    content,
-                    category,
-                    isPublic,
-                });
-                toast.success("Joke added! 🚀", { id: toastId });
+                await axiosInstance.post("/jokes", payload);
+                toast.success("The world is now 1% funnier! 🚀", { id: toastId });
             }
-            fetchJokes(); //fetch jokes
-            onClose(); //close modal
+            fetchJokes();
+            onClose();
         } catch (error) {
-            toast.error(
-                error.response.data.message || "Something went wrong! ❌",
-                { id: toastId },
-            );
+            toast.error(error.response?.data?.message || "Something went wrong!", { id: toastId });
         } finally {
             setLoading(false);
         }
@@ -62,82 +50,79 @@ const JokeModal = ({ isOpen, onClose, fetchJokes, editData = null }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
-                <div className="p-6">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                        {editData ? "Edit Your Joke ✏️" : "Share a New Joke 🤡"}
-                    </h2>
-
-                    <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-100 p-4 sm:p-6 transition-all">
+            <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-300 border border-slate-100">
+                <div className="p-8 sm:p-10">
+                    <div className="flex justify-between items-center mb-8">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Joke Content
+                            <h2 className="text-3xl font-black text-slate-900 tracking-tight">
+                                {editData ? "Refine Wit" : "Craft Humor"}
+                            </h2>
+                            <p className="text-slate-500 text-sm font-medium mt-1">
+                                {editData ? "Make your joke even better." : "Share your funniest thoughts."}
+                            </p>
+                        </div>
+                        <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-2">✕</button>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">
+                                The Punchline
                             </label>
                             <textarea
-                                className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none min-h-30"
-                                placeholder="Write something funny..."
+                                className="w-full p-5 bg-slate-50 border border-slate-200 rounded-3xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none min-h-40 text-slate-700 font-medium leading-relaxed resize-none"
+                                placeholder="What's the funny part? Write it here..."
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
                                 required
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Category
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">
+                                    Genre
                                 </label>
                                 <select
-                                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none capitalize"
+                                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500/10 outline-none capitalize font-bold text-slate-600 cursor-pointer"
                                     value={category}
-                                    onChange={(e) =>
-                                        setCategory(e.target.value)
-                                    }
+                                    onChange={(e) => setCategory(e.target.value)}
                                 >
-                                    {categories.length &&
-                                        categories.map((cat, index) => (
-                                            <option key={index} value={cat}>
-                                                {cat}
-                                            </option>
-                                        ))}
+                                    {categories.map((cat, index) => (
+                                        <option key={index} value={cat}>{cat}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Visibility
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">
+                                    Privacy
                                 </label>
                                 <select
-                                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500/10 outline-none font-bold text-slate-600 cursor-pointer"
                                     value={isPublic}
-                                    onChange={(e) =>
-                                        setIsPublic(e.target.value === "true")
-                                    }
+                                    onChange={(e) => setIsPublic(e.target.value === "true")}
                                 >
-                                    <option value="true">Public 🌍</option>
-                                    <option value="false">Private 🔒</option>
+                                    <option value="true">Go Public 🌍</option>
+                                    <option value="false">Stay Private 🔒</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div className="flex gap-3 pt-4">
+                        <div className="flex flex-col sm:flex-row gap-3 pt-6">
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="flex-1 py-3 border border-gray-300 rounded-xl font-bold hover:bg-gray-50 transition"
+                                className="flex-1 py-4 text-slate-500 font-black text-xs uppercase tracking-widest hover:bg-slate-50 rounded-2xl transition order-2 sm:order-1"
                             >
-                                Cancel
+                                Discard
                             </button>
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition disabled:bg-indigo-300"
+                                className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition disabled:bg-slate-200 order-1 sm:order-2 active:scale-95"
                             >
-                                {loading
-                                    ? "Saving..."
-                                    : editData
-                                      ? "Update"
-                                      : "Post Joke"}
+                                {loading ? "Syncing..." : editData ? "Confirm Update" : "Publish Joke 🚀"}
                             </button>
                         </div>
                     </form>

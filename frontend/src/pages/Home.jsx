@@ -3,58 +3,63 @@ import { Link } from "react-router-dom";
 
 const Home = () => {
     return (
-        <div className="min-h-screen">
+        <div className="min-h-screen bg-white">
             <Navbar />
 
             {/* Hero Section */}
-            <section className="py-20 px-4 text-center bg-linear-to-b from-indigo-50 to-white">
-                <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 mb-6 tracking-tight">
-                    Duniya ko <span className="text-indigo-600">Hasao</span>,{" "}
-                    <br /> Ek Joke se!
+            <section className="py-12 md:py-24 px-6 text-center bg-linear-to-b from-slate-50 to-white">
+                <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-slate-900 mb-6 tracking-tight leading-[1.1]">
+                    Laughter is <span className="text-indigo-600">Universal.</span>{" "}
+                    <br className="hidden sm:block" /> Share the Joy.
                 </h1>
-                <p className="text-lg text-gray-600 mb-10 max-w-2xl mx-auto">
-                    Sabse badhiya jokes padho, share karo aur apne doston ke
-                    saath maze lo. Hamara platform dedicated hai sirf asli humor
-                    ke liye.
+                <p className="text-base md:text-xl text-slate-600 mb-10 max-w-2xl mx-auto px-2 leading-relaxed">
+                    Join the world's most hilarious community. Discover trending humor, 
+                    share your wit, and connect with people through the power of a great joke.
                 </p>
 
-                <div className="flex justify-center space-x-4">
+                {/* CTA Buttons */}
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-5">
                     <Link
                         to="/explore"
-                        className="bg-indigo-600 text-white px-8 py-4 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition transform hover:-translate-y-1"
+                        className="w-full sm:w-auto bg-indigo-600 text-white px-10 py-4 rounded-2xl font-bold shadow-xl shadow-indigo-200 hover:bg-indigo-700 transition transform hover:-translate-y-1 text-center"
                     >
-                        Explore Jokes 🃏
+                        Start Exploring 🃏
                     </Link>
                     <Link
                         to="/register"
-                        className="bg-white text-gray-800 border border-gray-300 px-8 py-4 rounded-xl font-bold shadow-sm hover:bg-gray-50 transition"
+                        className="w-full sm:w-auto bg-white text-slate-800 border-2 border-slate-200 px-10 py-4 rounded-2xl font-bold hover:bg-slate-50 transition text-center"
                     >
-                        Join the Community
+                        Become a Creator
                     </Link>
                 </div>
             </section>
 
             {/* Feature Section */}
-            <section className="max-w-7xl mx-auto px-4 py-20 grid md:grid-cols-3 gap-8">
-                <div className="bg-white p-8 rounded-2xl shadow-xs border border-gray-100 text-center">
-                    <div className="text-4xl mb-4">✍️</div>
-                    <h3 className="font-bold text-xl mb-2">Write Jokes</h3>
-                    <p className="text-gray-500">
-                        Apni creativity dikhao aur mast jokes likho.
+            <section className="max-w-7xl mx-auto px-6 py-20 grid grid-cols-1 md:grid-cols-3 gap-10">
+                {/* Feature 1 */}
+                <div className="group bg-white p-10 rounded-4xl shadow-sm border border-slate-100 text-center hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-50/50 transition-all duration-300">
+                    <div className="text-5xl mb-6 group-hover:scale-110 transition duration-300 transform inline-block">✍️</div>
+                    <h3 className="font-bold text-2xl mb-3 text-slate-900">Craft Humor</h3>
+                    <p className="text-slate-500 leading-relaxed text-lg">
+                        Unleash your creativity and publish jokes that resonate with the world.
                     </p>
                 </div>
-                <div className="bg-white p-8 rounded-2xl shadow-xs border border-gray-100 text-center">
-                    <div className="text-4xl mb-4">❤️</div>
-                    <h3 className="font-bold text-xl mb-2">Like & Share</h3>
-                    <p className="text-gray-500">
-                        Jo pasand aaye use like karo aur doston ko bhejo.
+                
+                {/* Feature 2 */}
+                <div className="group bg-white p-10 rounded-4xl shadow-sm border border-slate-100 text-center hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-50/50 transition-all duration-300">
+                    <div className="text-5xl mb-6 group-hover:scale-110 transition duration-300 transform inline-block">⚡</div>
+                    <h3 className="font-bold text-2xl mb-3 text-slate-900">Engage & Vibe</h3>
+                    <p className="text-slate-500 leading-relaxed text-lg">
+                        React to the funniest content and spread the laughter across social circles.
                     </p>
                 </div>
-                <div className="bg-white p-8 rounded-2xl shadow-xs border border-gray-100 text-center">
-                    <div className="text-4xl mb-4">🏆</div>
-                    <h3 className="font-bold text-xl mb-2">Get Famous</h3>
-                    <p className="text-gray-500">
-                        Top creators ki list mein apna naam lao.
+
+                {/* Feature 3 */}
+                <div className="group bg-white p-10 rounded-4xl shadow-sm border border-slate-100 text-center hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-50/50 transition-all duration-300">
+                    <div className="text-5xl mb-6 group-hover:scale-110 transition duration-300 transform inline-block">📈</div>
+                    <h3 className="font-bold text-2xl mb-3 text-slate-900">Go Viral</h3>
+                    <p className="text-slate-500 leading-relaxed text-lg">
+                        Rise through the ranks and become a top-tier humorist in our global community.
                     </p>
                 </div>
             </section>

@@ -1,59 +1,77 @@
+import { useRef, useState } from "react";
 import useCategories from "../hooks/useCategories.js";
+
 function CategoryChips({ onCategoryChange, category }) {
     const { categories, loading, error } = useCategories();
+    const scrollRef = useRef(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [startX, setStartX] = useState(0);
+    const [scrollLeft, setScrollLeft] = useState(0);
 
-    if (error) {
-        return (
-            <h2 className="text-red-500 text-xl font-bold text-center">
-                {error || "Somthing Went wrong"}
-            </h2>
-        );
-    }
+    // Mouse Drag Logic
+    const handleMouseDown = (e) => {
+        setIsDragging(true);
+        setStartX(e.pageX - scrollRef.current.offsetLeft);
+        setScrollLeft(scrollRef.current.scrollLeft);
+    };
+
+    const handleMouseLeave = () => setIsDragging(false);
+    const handleMouseUp = () => setIsDragging(false);
+
+    const handleMouseMove = (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const x = e.pageX - scrollRef.current.offsetLeft;
+        const walk = (x - startX) * 2; // Scroll speed
+        scrollRef.current.scrollLeft = scrollLeft - walk;
+    };
+
+    if (error) return <div className="text-red-500 p-4 text-center">⚠️ Error loading categories</div>;
 
     return (
-        <>
+        <div className="w-full mb-8 select-none"> {/* select-none taaki text highlight na ho drag krte waqt */}
             {loading ? (
-                <div className="flex gap-3 px-4 h-10  mb-8  scrollbar-hide overflow-x-auto">
-                    {[...Array(15)].map((_, index) => (
-                        <div
-                            key={index}
-                            className="bg-gray-200 w-auto px-16 py-2 rounded-full"
-                        ></div>
+                <div className="flex gap-3 px-4 h-11 overflow-hidden">
+                    {[...Array(8)].map((_, i) => (
+                        <div key={i} className="bg-slate-200 animate-pulse min-w-30 rounded-full" />
                     ))}
                 </div>
             ) : (
-                <div className="flex gap-3 px-4 h-10  mb-8  scrollbar-hide overflow-x-auto border-x-2">
+                <div 
+                    ref={scrollRef}
+                    onMouseDown={handleMouseDown}
+                    onMouseLeave={handleMouseLeave}
+                    onMouseUp={handleMouseUp}
+                    onMouseMove={handleMouseMove}
+                    className={`flex gap-3 px-4 h-12 overflow-x-auto scrollbar-hide snap-x cursor-grab active:cursor-grabbing pb-1`}
+                >
                     <button
-                        onClick={() => {
-                            onCategoryChange("");
-                        }}
-                        className={`cursor-pointer px-5 py-2 capitalize rounded-full font-medium transition ${
-                            category === "all"
-                                ? "bg-indigo-600 text-white shadow-lg"
-                                : "bg-white text-gray-600 hover:bg-indigo-50 border border-gray-200"
+                        onClick={() => !isDragging && onCategoryChange("")}
+                        className={`shrink-0 px-6 py-2 h-full rounded-full font-bold text-sm transition-all border-2 snap-start ${
+                            category === "" || category === "all"
+                                ? "bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100"
+                                : "bg-white text-slate-500 border-slate-100 hover:border-indigo-200"
                         }`}
                     >
-                        All
+                        Explore All
                     </button>
 
                     {categories.map((cat) => (
                         <button
                             key={cat}
-                            onClick={() => {
-                                onCategoryChange(cat);
-                            }}
-                            className={`cursor-pointer px-5 py-2  text-nowrap capitalize rounded-full font-medium transition ${
+                            onClick={() => !isDragging && onCategoryChange(cat)}
+                            className={`shrink-0 px-6 py-2 h-full rounded-full font-bold text-sm transition-all border-2 snap-start capitalize ${
                                 category === cat
-                                    ? "bg-indigo-600 text-white shadow-lg"
-                                    : "bg-white text-gray-600 hover:bg-indigo-50 border border-gray-200"
+                                    ? "bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100"
+                                    : "bg-white text-slate-500 border-slate-100 hover:border-indigo-200"
                             }`}
                         >
-                            {cat === "" ? "All" : cat}
+                            {cat}
                         </button>
                     ))}
                 </div>
             )}
-        </>
+        </div>
     );
 }
 

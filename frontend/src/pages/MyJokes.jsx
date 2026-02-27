@@ -16,17 +16,19 @@ const MyJokes = () => {
     const { categories } = useCategories();
 
     const fetchMyJokes = async () => {
+        setLoading(true);
         try {
             const response = await axiosInstance.get(
                 `/jokes/my-jokes?page=${page}&category=${category}&limit=5`,
             );
             setData(response.data.data);
         } catch (error) {
-            toast.error("Jokes Loading failed! ☹️");
+            toast.error("Cloud sync failed! ☹️");
         } finally {
             setLoading(false);
         }
     };
+
     const handleAddNew = () => {
         setSelectedJoke(null);
         setIsModalOpen(true);
@@ -38,128 +40,122 @@ const MyJokes = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm("Do you really want to delete this joke?")) return;
+        if (!window.confirm("Are you sure you want to permanently delete this joke?")) return;
 
         try {
             await axiosInstance.delete(`/jokes/${id}`);
-            const updatedJokes = data.jokes.filter((j) => j._id !== id);
-            if (updatedJokes.length === 0) {
-                if (page > 1) {
-                    setPage((prev) => prev - 1);
-                } else {
-                    fetchMyJokes();
-                }
-            } else {
-                setData((prev) => ({
-                    ...prev,
-                    jokes: updatedJokes,
-                    totalJokes: prev.totalJokes - 1,
-                }));
-            }
-
-            toast.success("Joke Deleted! 🗑️");
+            toast.success("Joke moved to trash! 🗑️");
+            fetchMyJokes(); // Refresh to handle pagination logic correctly
         } catch (error) {
-            toast.error("Delete fail ho gaya!");
+            toast.error("Operation failed!");
         }
     };
+
     useEffect(() => {
         fetchMyJokes();
     }, [page, category]);
 
     return (
         <Layout>
-            <div className="flex justify-between items-center mb-8">
-                <button
-                    onClick={() => handleAddNew()}
-                    className="cursor-pointer border-2 border-blue-500 rounded-xl py-2 px-4 bg-blue-700 text-white"
-                >
-                    Add Joke
-                </button>
-                <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="outline-hidden cursor-pointer border-2 border-blue-500 rounded-xl py-2 px-4 bg-blue-700 text-white"
-                >
-                    <option value="" disabled hidden>
-                        --Select--
-                    </option>
-                    <option value="">All</option>
-                    {categories.length &&
-                        categories.map((cat, i) => (
-                            <option value={cat} key={i}>
-                                {cat}
-                            </option>
+            {/* Header Actions */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
+                <div>
+                    <h1 className="text-3xl font-black text-slate-800 tracking-tight">My Library</h1>
+                    <p className="text-slate-500 font-medium text-sm">Manage and curate your humor collection.</p>
+                </div>
+
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <select
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        className="flex-1 sm:flex-none outline-none cursor-pointer border border-slate-200 rounded-2xl py-3 px-4 bg-white text-slate-600 font-bold text-sm shadow-sm focus:ring-2 focus:ring-indigo-500/20"
+                    >
+                        <option value="">All Categories</option>
+                        {categories.map((cat, i) => (
+                            <option value={cat} key={i}>{cat}</option>
                         ))}
-                </select>
+                    </select>
+
+                    <button
+                        onClick={() => handleAddNew()}
+                        className="cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl py-3 px-6 font-black text-sm uppercase tracking-widest shadow-lg shadow-indigo-100 transition-all active:scale-95"
+                    >
+                        + Create
+                    </button>
+                </div>
             </div>
 
+            {/* Content List */}
             {loading ? (
                 <div className="space-y-4">
                     {[1, 2, 3].map((i) => (
-                        <div
-                            key={i}
-                            className="h-20 bg-gray-200 animate-pulse rounded-xl"
-                        ></div>
+                        <div key={i} className="h-24 bg-white animate-pulse rounded-4xl border border-slate-100"></div>
                     ))}
                 </div>
             ) : data?.jokes?.length === 0 ? (
-                <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-300">
-                    <p className="text-gray-400 text-lg font-medium">
-                        Jokes not created yet! 🧐
+                <div className="text-center py-20 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-200">
+                    <div className="text-5xl mb-4 text-slate-300">🧊</div>
+                    <p className="text-slate-500 text-lg font-bold tracking-tight">
+                        Your library is empty.
                     </p>
+                    <button onClick={handleAddNew} className="text-indigo-600 font-black mt-2 hover:underline">Start writing now</button>
                 </div>
             ) : (
-                <div className="grid gap-4">
+                <div className="grid gap-5">
                     {data?.jokes?.map((joke) => (
                         <div
                             key={joke._id}
-                            className="bg-white p-5 rounded-2xl shadow-xs border border-gray-100 flex justify-between items-center group hover:border-indigo-200 transition"
+                            className="bg-white p-6 rounded-4xl shadow-sm border border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center group hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-50/30 transition-all duration-300"
                         >
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
+                            <div className="flex-1 pr-4">
+                                <div className="flex items-center gap-3 mb-3">
                                     <span
-                                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${joke.isPublic ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-500"}`}
+                                        className={`text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-[0.15em] ${joke.isPublic ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-slate-100 text-slate-500 border border-slate-200"}`}
                                     >
                                         {joke.isPublic ? "Public" : "Private"}
                                     </span>
-                                    <span className="text-xs text-indigo-500 font-semibold">
+                                    <span className="text-xs text-indigo-500 font-black uppercase tracking-widest">
                                         {joke.category}
                                     </span>
                                 </div>
-                                <p className="text-gray-700 font-medium line-clamp-2 italic">
+                                <p className="text-slate-700 font-semibold leading-relaxed line-clamp-2">
                                     "{joke.content}"
                                 </p>
                             </div>
 
-                            <div className="flex gap-2 ml-4">
+                            <div className="flex gap-3 mt-4 sm:mt-0 w-full sm:w-auto border-t sm:border-t-0 pt-4 sm:pt-0 border-slate-50">
                                 <button
                                     onClick={() => handleEdit(joke)}
-                                    className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
-                                    title="Edit"
+                                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-50 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all font-bold text-sm"
                                 >
-                                    ✏️
+                                    <span>Edit</span> ✏️
                                 </button>
                                 <button
                                     onClick={() => handleDelete(joke._id)}
-                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
-                                    title="Delete"
+                                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-600 rounded-xl transition-all font-bold text-sm"
                                 >
-                                    🗑️
+                                    <span>Delete</span> 🗑️
                                 </button>
                             </div>
                         </div>
                     ))}
                 </div>
             )}
-            {/* pagination component */}
-            {!loading ? (
-                <Pagination
-                    currentPage={data.currentPage}
-                    totalPages={data.totalPages}
-                    onPageChange={(newPage) => setPage(newPage)}
-                />
-            ) : null}
-            {/* popup modal comp */}
+
+            {/* Pagination Container */}
+            {!loading && data?.totalPages > 1 && (
+                <div className="mt-12 flex justify-center">
+                    <Pagination
+                        currentPage={data.currentPage}
+                        totalPages={data.totalPages}
+                        onPageChange={(newPage) => {
+                            setPage(newPage);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                    />
+                </div>
+            )}
+
             <JokeModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
